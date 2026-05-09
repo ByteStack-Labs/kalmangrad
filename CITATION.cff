@@ -1,0 +1,33 @@
+cff-version: 1.2.0
+message: "If kalmangrad informs your work, citation is appreciated."
+type: software
+title: "kalmangrad"
+abstract: >-
+  Kalman filtering from scratch with autodiff visualization,
+  mathematical derivation, and diagnostic instrumentation
+  for production estimation systems.
+authors:
+  - family-names: Moses
+    given-names: Jesse
+repository-code: "https://github.com/ByteStack-Labs/kalmangrad"
+url: "https://github.com/ByteStack-Labs/kalmangrad"
+license: Apache-2.0
+version: 0.1.0-dev
+date-released: 2026-05-09
+keywords:
+  - kalman-filter
+  - state-estimation
+  - automatic-differentiation
+  - bayesian-filtering
+  - autodiff
+  - from-scratch
+preferred-citation:
+  type: software
+  title: "kalmangrad: Kalman Filtering from Scratch with Diagnostic Instrumentation"
+  authors:
+    - family-names: Moses
+      given-names: Jesse
+  year: 2026
+  publisher:
+    name: "ByteStack Labs"
+  url: "https://github.com/ByteStack-Labs/kalmangrad"
