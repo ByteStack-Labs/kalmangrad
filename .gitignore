@@ -155,3 +155,4 @@ logs/
 .secrets
 *.pem
 *.key
+uv.lock
