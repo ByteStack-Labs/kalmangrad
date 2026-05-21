@@ -725,3 +725,135 @@ suboptimal due to rounding error or covariance specification mismatch.
 The reference implementation uses the Joseph form. The standard form
 is mathematically cleaner; the Joseph form is what production
 estimation deploys.
+
+## 6. Optimality
+
+### 6.1 MMSE optimality under linear-Gaussian assumptions
+
+The Kalman gain in equation (5.14) was derived by minimizing the
+trace of the updated covariance. The trace is the sum of the variances
+of the state estimate components. Minimizing it minimizes the total
+mean squared error of the estimate:
+
+$$
+\text{MSE}(\hat{\mathbf{x}}_k) = \mathbb{E}\left[(\mathbf{x}_k - \hat{\mathbf{x}}_k)^T (\mathbf{x}_k - \hat{\mathbf{x}}_k)\right] = \text{tr}(\mathbf{P}_k)
+\tag{6.1}
+$$
+
+The Kalman filter is the minimum mean squared error (MMSE) estimator
+within the class of linear estimators. No linear combination of the
+prediction and the measurement produces a smaller mean squared error.
+
+Under the linear-Gaussian assumptions of Section 2, a stronger
+statement holds. The Kalman filter is the MMSE estimator within the
+class of all estimators, linear or otherwise. The linear restriction
+is not a restriction at all when the underlying distributions are
+Gaussian.
+
+The reason is the Gaussian conditioning property. When $\mathbf{x}_k$
+and $\mathbf{z}_k$ are jointly Gaussian, the conditional mean
+$\mathbb{E}[\mathbf{x}_k \mid \mathbf{z}_{1:k}]$ is a linear function
+of the measurements. Nonlinear estimators cannot do better than
+linear ones because the optimal estimator is already linear. The
+Kalman filter computes this linear conditional mean exactly.
+
+This is the strongest optimality claim available. Under linear-Gaussian
+assumptions, the Kalman filter is not just the best linear estimator.
+It is the best estimator.
+
+### 6.2 The orthogonality principle
+
+The minimum-variance derivation in Section 5.2 produces the optimal
+gain through calculus. The orthogonality principle produces the same
+gain through a geometric argument. Both paths arrive at the same
+result. Seeing both clarifies the structural reason for the optimality.
+
+The orthogonality principle states that the optimal estimation error
+is uncorrelated with the data used to form the estimate. Formally,
+for the optimal $\hat{\mathbf{x}}_k$:
+
+$$
+\mathbb{E}\left[(\mathbf{x}_k - \hat{\mathbf{x}}_k) \mathbf{z}_j^T\right] = \mathbf{0} \quad \text{for all } j \leq k
+\tag{6.2}
+$$
+
+The error of the optimal estimate is orthogonal to every measurement
+used in computing the estimate. If the error were correlated with any
+measurement, that correlation could be exploited to reduce the error
+further. The estimate would not be optimal. Optimality requires the
+correlation to vanish.
+
+Applying the orthogonality condition to the innovation:
+
+$$
+\mathbb{E}\left[(\mathbf{x}_k - \hat{\mathbf{x}}_k) \boldsymbol{\nu}_k^T\right] = \mathbf{0}
+\tag{6.3}
+$$
+
+Substituting the updated estimate from equation (5.7) and the innovation
+from equation (5.2) into equation (6.3), then solving for
+$\mathbf{K}_k$, produces the same gain as the minimum-variance
+derivation. The two paths are different views of the same structure.
+
+The orthogonality principle is geometric. The optimal estimate
+$\hat{\mathbf{x}}_k$ is the projection of $\mathbf{x}_k$ onto the
+subspace spanned by the measurements. The error $\mathbf{x}_k -
+\hat{\mathbf{x}}_k$ is the component of $\mathbf{x}_k$ orthogonal
+to that subspace. Projection minimizes distance. The Kalman filter
+is performing orthogonal projection in the Hilbert space of
+square-integrable random variables.
+
+This view does not change the equations. It changes how the equations
+are understood.
+
+### 6.3 What "optimal" means and what it doesn't
+
+The optimality of the Kalman filter is conditional. The conditions are
+the assumptions of Section 2:
+
+- Linear dynamics and measurements
+- Gaussian noise with known covariance
+- Process noise and measurement noise mutually independent and white
+- Initial state Gaussian with known mean and covariance
+
+When all four conditions hold, the filter is the MMSE estimator and
+no improvement is possible. When any condition is weakened, the
+optimality claim weakens with it.
+
+**Nonlinear dynamics or measurements.** The Extended Kalman Filter
+linearizes the dynamics or measurement model around the current
+estimate and applies the linear Kalman update to the linearized system.
+The result is an approximation. It is no longer optimal in any formal
+sense, though it is often the best tractable approximation available.
+The Unscented Kalman Filter uses a deterministic sampling approach to
+propagate the mean and covariance through the nonlinear functions
+directly. It typically achieves better accuracy than the EKF for
+strongly nonlinear systems, but it too is an approximation.
+
+**Non-Gaussian noise.** When the noise distribution is non-Gaussian,
+the Kalman filter remains the best linear estimator but is no longer
+the best estimator overall. Particle filters and other Monte Carlo
+methods can outperform the Kalman filter in this regime by representing
+the non-Gaussian posterior explicitly.
+
+**Misspecified covariance.** The filter assumes $\mathbf{Q}_k$ and
+$\mathbf{R}_k$ are known. In practice they are modeled, estimated, or
+guessed. When they are wrong, the filter produces a suboptimal estimate
+whose error is larger than the covariance suggests. The innovation
+sequence statistics developed in Section 7 detect this failure mode.
+
+**Correlated noise.** When the process and measurement noises are
+correlated, or when either is colored rather than white, the standard
+Kalman filter is no longer optimal. Modified forms of the filter exist
+that handle these cases when the correlation structure is known.
+
+Optimality is a property of the model, not a property of reality. The
+filter is optimal given the model. Whether the model fits reality is
+a separate question. The diagnostics in Section 7 provide tools to
+assess that question quantitatively.
+
+This is the correct framing for production deployment. The filter is
+not magic. It is the best estimator under specific assumptions. The
+work of an estimation engineer is to determine whether those
+assumptions hold, to characterize how they fail when they do, and to
+deploy the filter with full knowledge of both.
