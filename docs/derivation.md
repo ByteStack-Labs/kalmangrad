@@ -373,3 +373,130 @@ The sections that follow derive the explicit recursions for the mean
 and covariance. Section 4 derives the prediction step. Section 5
 derives the update step. Section 6 establishes the optimality
 properties that hold under the linear-Gaussian assumptions.
+
+## 4. The Prediction Step
+
+### 4.1 Propagating the mean
+
+The prediction step propagates the state estimate forward through the
+dynamics. Starting from the posterior at time $k-1$:
+
+$$
+p(\mathbf{x}_{k-1} \mid \mathbf{z}_{1:k-1}) = \mathcal{N}(\hat{\mathbf{x}}_{k-1}, \mathbf{P}_{k-1})
+\tag{4.1}
+$$
+
+The predicted state at time $k$ is the conditional expectation of
+$\mathbf{x}_k$ given the measurements through time $k-1$:
+
+$$
+\hat{\mathbf{x}}_k^- = \mathbb{E}[\mathbf{x}_k \mid \mathbf{z}_{1:k-1}]
+\tag{4.2}
+$$
+
+Substituting the process model from equation (2.1):
+
+$$
+\hat{\mathbf{x}}_k^- = \mathbb{E}[\mathbf{F}_k \mathbf{x}_{k-1} + \mathbf{w}_k \mid \mathbf{z}_{1:k-1}]
+\tag{4.3}
+$$
+
+Expectation is linear. The process noise $\mathbf{w}_k$ is independent
+of all prior measurements and has zero mean. Equation (4.3) reduces to:
+
+$$
+\hat{\mathbf{x}}_k^- = \mathbf{F}_k \, \mathbb{E}[\mathbf{x}_{k-1} \mid \mathbf{z}_{1:k-1}] + \mathbb{E}[\mathbf{w}_k]
+\tag{4.4}
+$$
+
+The first expectation is the posterior mean from time $k-1$. The
+second expectation is zero by the noise assumption in equation (2.3).
+The predicted mean is therefore:
+
+$$
+\boxed{\hat{\mathbf{x}}_k^- = \mathbf{F}_k \hat{\mathbf{x}}_{k-1}}
+\tag{4.5}
+$$
+
+The predicted state is the previous state estimate propagated through
+the state transition matrix. No measurement information has been used.
+The dynamics alone determine the predicted state.
+
+### 4.2 Propagating the covariance
+
+The predicted covariance is the conditional covariance of $\mathbf{x}_k$
+given the measurements through time $k-1$:
+
+$$
+\mathbf{P}_k^- = \mathbb{E}\left[(\mathbf{x}_k - \hat{\mathbf{x}}_k^-)(\mathbf{x}_k - \hat{\mathbf{x}}_k^-)^T \mid \mathbf{z}_{1:k-1}\right]
+\tag{4.6}
+$$
+
+Substituting the process model and the predicted mean from equation
+(4.5):
+
+$$
+\mathbf{x}_k - \hat{\mathbf{x}}_k^- = \mathbf{F}_k \mathbf{x}_{k-1} + \mathbf{w}_k - \mathbf{F}_k \hat{\mathbf{x}}_{k-1} = \mathbf{F}_k(\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1}) + \mathbf{w}_k
+\tag{4.7}
+$$
+
+The error in the predicted state has two contributions: the propagated
+error from the previous estimate, and the new process noise. Both are
+zero-mean. Substituting equation (4.7) into equation (4.6) and
+expanding the outer product:
+
+$$
+\mathbf{P}_k^- = \mathbb{E}\left[\mathbf{F}_k(\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1})(\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1})^T \mathbf{F}_k^T \mid \mathbf{z}_{1:k-1}\right]
+$$
+$$
++ \mathbb{E}\left[\mathbf{F}_k(\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1}) \mathbf{w}_k^T \mid \mathbf{z}_{1:k-1}\right]
+$$
+$$
++ \mathbb{E}\left[\mathbf{w}_k (\mathbf{x}_{k-1} - \hat{\mathbf{x}}_{k-1})^T \mathbf{F}_k^T \mid \mathbf{z}_{1:k-1}\right]
+$$
+$$
++ \mathbb{E}\left[\mathbf{w}_k \mathbf{w}_k^T \mid \mathbf{z}_{1:k-1}\right]
+\tag{4.8}
+$$
+
+The two cross terms vanish. The process noise $\mathbf{w}_k$ is
+independent of $\mathbf{x}_{k-1}$ and of all prior measurements; the
+expectation of the product factors, and one factor is zero. The
+remaining terms are the propagated covariance and the process noise
+covariance:
+
+$$
+\boxed{\mathbf{P}_k^- = \mathbf{F}_k \mathbf{P}_{k-1} \mathbf{F}_k^T + \mathbf{Q}_k}
+\tag{4.9}
+$$
+
+The predicted covariance has two terms. The first term, $\mathbf{F}_k
+\mathbf{P}_{k-1} \mathbf{F}_k^T$, is the prior covariance transformed
+by the dynamics. The second term, $\mathbf{Q}_k$, is the additional
+uncertainty introduced by the process noise. The covariance always
+grows in the prediction step. Time without measurement increases
+uncertainty.
+
+### 4.3 The predicted state distribution
+
+Equations (4.5) and (4.9) give the mean and covariance of the
+predicted state. Because the dynamics are linear and the noise is
+Gaussian, the predicted state distribution is itself Gaussian:
+
+$$
+p(\mathbf{x}_k \mid \mathbf{z}_{1:k-1}) = \mathcal{N}(\hat{\mathbf{x}}_k^-, \mathbf{P}_k^-)
+\tag{4.10}
+$$
+
+This is the result of the marginalization integral in equation (3.3)
+under linear-Gaussian assumptions. The integral does not need to be
+evaluated explicitly. The Gaussian closure property from Section 3.3
+guarantees the result.
+
+The predicted distribution carries everything the dynamics know about
+the state at time $k$ before the measurement $\mathbf{z}_k$ is
+processed. The mean $\hat{\mathbf{x}}_k^-$ is the best estimate of the
+state under the dynamics alone. The covariance $\mathbf{P}_k^-$
+quantifies the uncertainty in that estimate.
+
+The next section incorporates the measurement.
