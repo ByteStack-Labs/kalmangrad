@@ -857,3 +857,148 @@ not magic. It is the best estimator under specific assumptions. The
 work of an estimation engineer is to determine whether those
 assumptions hold, to characterize how they fail when they do, and to
 deploy the filter with full knowledge of both.
+
+## 7. Properties of the Innovation Sequence
+
+The innovation sequence $\{\boldsymbol{\nu}_1, \boldsymbol{\nu}_2,
+\ldots, \boldsymbol{\nu}_k\}$ is the most informative signal the filter
+produces. Under the assumptions of Section 2, the innovation has three
+statistical properties: zero mean, known covariance, and whiteness.
+These properties hold by mathematical necessity when the model is
+correct. They fail in specific, characterizable ways when the model
+is wrong. The properties are therefore both a verification that the
+filter is operating correctly and a diagnostic that surfaces when it
+is not.
+
+### 7.1 Whiteness under correct model
+
+The innovation sequence is white. Innovations at different times are
+mutually uncorrelated:
+
+$$
+\mathbb{E}[\boldsymbol{\nu}_k \boldsymbol{\nu}_j^T] = \mathbf{0} \quad \text{for all } k \neq j
+\tag{7.1}
+$$
+
+The whiteness property follows from the optimality of the Kalman
+filter. The orthogonality principle from Section 6.2 states that the
+optimal estimation error is uncorrelated with every measurement used
+in computing the estimate. The innovation at time $k$ is a linear
+function of the prediction error at time $k$ and the measurement
+noise at time $k$. The prediction error at time $k$ depends on the
+estimate at time $k-1$, which was constructed to be orthogonal to all
+measurements through time $k-1$. The measurement noise at time $k$ is
+independent of all prior measurement noise by assumption.
+
+Combining these: the innovation at time $k$ is uncorrelated with every
+prior measurement and with every prior measurement noise. Since prior
+innovations are linear combinations of prior measurements and prior
+measurement noise, the innovation at time $k$ is uncorrelated with
+every prior innovation.
+
+The whiteness of the innovation sequence is the signature of optimal
+filtering. A correctly specified filter produces a white innovation
+sequence. A misspecified filter does not.
+
+### 7.2 Zero mean
+
+The innovation has zero mean:
+
+$$
+\mathbb{E}[\boldsymbol{\nu}_k] = \mathbf{0}
+\tag{7.2}
+$$
+
+This was established in equation (5.3). The derivation is direct.
+The innovation is the difference between the actual measurement and
+the predicted measurement:
+
+$$
+\boldsymbol{\nu}_k = \mathbf{z}_k - \mathbf{H}_k \hat{\mathbf{x}}_k^- = \mathbf{H}_k(\mathbf{x}_k - \hat{\mathbf{x}}_k^-) + \mathbf{v}_k
+\tag{7.3}
+$$
+
+Both terms have zero mean. The prediction error has zero mean because
+the predicted state is the conditional mean of $\mathbf{x}_k$ given
+prior measurements. The measurement noise has zero mean by the
+assumption in equation (2.3). Their sum has zero mean.
+
+A nonzero innovation mean indicates a bias in the filter's
+predictions. The cause is structural: either the dynamics model
+$\mathbf{F}_k$ is incorrect, the measurement model $\mathbf{H}_k$ is
+incorrect, or one of the noise processes has a nonzero mean that has
+not been absorbed into the deterministic part of the model. None of
+these conditions can be corrected by tuning the noise covariances.
+They require correcting the model itself.
+
+### 7.3 Known covariance
+
+The innovation covariance equals $\mathbf{S}_k$ exactly:
+
+$$
+\mathbb{E}[\boldsymbol{\nu}_k \boldsymbol{\nu}_k^T] = \mathbf{S}_k = \mathbf{H}_k \mathbf{P}_k^- \mathbf{H}_k^T + \mathbf{R}_k
+\tag{7.4}
+$$
+
+This was established in equation (5.6). The innovation covariance is
+fully determined by the prediction covariance $\mathbf{P}_k^-$ and the
+measurement noise covariance $\mathbf{R}_k$. It does not require
+empirical estimation. The filter computes it as part of its normal
+operation.
+
+The empirical innovation covariance, computed from the observed
+innovation sequence, should agree with the filter-computed $\mathbf{S}_k$
+to within sampling variation. When the empirical covariance is
+systematically larger than $\mathbf{S}_k$, the filter is underestimating
+its own uncertainty. When the empirical covariance is systematically
+smaller, the filter is overestimating its uncertainty. Both cases
+indicate covariance misspecification.
+
+The normalized innovation squared (NIS) statistic operationalizes
+this comparison:
+
+$$
+\epsilon_{\nu, k} = \boldsymbol{\nu}_k^T \mathbf{S}_k^{-1} \boldsymbol{\nu}_k
+\tag{7.5}
+$$
+
+Under the model assumptions, $\epsilon_{\nu, k}$ follows a chi-squared
+distribution with $m$ degrees of freedom, where $m$ is the measurement
+dimension. A time-averaged NIS that falls outside the expected chi-squared
+range indicates that the empirical innovation covariance disagrees with
+the filter-computed $\mathbf{S}_k$. The disagreement is detectable from
+a finite sample.
+
+### 7.4 Why these properties matter
+
+The three innovation properties are whiteness, zero mean, and known covariance. They are jointly necessary and sufficient for the filter to be operating correctly under its specified model. When all three hold in the observed data, the model and the filter agree. When any fails, the model and the data disagree in a specific way:
+
+**Non-white innovations** indicate that the filter is not extracting
+all available information from the measurements. The dynamics model
+or measurement model is missing structure that the data contains. This
+manifests as autocorrelation in the innovation sequence at one or more
+lags. The lag structure of the autocorrelation often points to the
+missing model component.
+
+**Non-zero mean innovations** indicate bias in the filter's predictions.
+The structural causes are model error in $\mathbf{F}_k$ or $\mathbf{H}_k$,
+or unmodeled deterministic forcing. Tuning noise covariances does not
+correct bias.
+
+**Innovation covariance mismatch** indicates that $\mathbf{Q}_k$ or
+$\mathbf{R}_k$ are misspecified. The filter's uncertainty estimate is
+inconsistent with the actual error magnitude. NIS statistics quantify
+this mismatch and identify whether the filter is over-confident or
+under-confident.
+
+The innovation sequence is therefore a self-diagnosing structure. It
+contains within itself the information needed to detect when the
+filter is operating outside its assumptions. The diagnostics that
+extract this information are developed in the implementation in
+[`diagnostics.py`](../diagnostics.py).
+
+This is the structural reason for caring about innovation properties
+in production estimation. A filter that runs without monitoring its
+innovation sequence is operating blind. A filter that monitors its
+innovation sequence knows when it is performing correctly and when
+it is not. The work of an estimation engineer is to deploy the latter.
