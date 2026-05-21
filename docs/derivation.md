@@ -500,3 +500,228 @@ state under the dynamics alone. The covariance $\mathbf{P}_k^-$
 quantifies the uncertainty in that estimate.
 
 The next section incorporates the measurement.
+
+## 5. The Update Step
+
+### 5.1 The innovation
+
+When the measurement $\mathbf{z}_k$ arrives, it can be compared to what
+the predicted state suggests it should be. The expected measurement
+under the predicted state is $\mathbf{H}_k \hat{\mathbf{x}}_k^-$.
+The difference between the actual measurement and the expected
+measurement is the innovation:
+
+$$
+\boldsymbol{\nu}_k = \mathbf{z}_k - \mathbf{H}_k \hat{\mathbf{x}}_k^-
+\tag{5.1}
+$$
+
+The innovation captures what the measurement adds beyond what was
+already predicted. If the predicted state were exact, the innovation
+would be zero. The innovation is nonzero because of two sources: the
+error in the predicted state, and the measurement noise.
+
+Substituting the measurement model from equation (2.2) and the
+predicted state from Section 4:
+
+$$
+\boldsymbol{\nu}_k = \mathbf{H}_k \mathbf{x}_k + \mathbf{v}_k - \mathbf{H}_k \hat{\mathbf{x}}_k^- = \mathbf{H}_k(\mathbf{x}_k - \hat{\mathbf{x}}_k^-) + \mathbf{v}_k
+\tag{5.2}
+$$
+
+The first term is the prediction error projected through the
+measurement matrix. The second term is the measurement noise. Both
+are zero-mean, so the innovation has zero mean under the model
+assumptions:
+
+$$
+\mathbb{E}[\boldsymbol{\nu}_k] = \mathbf{0}
+\tag{5.3}
+$$
+
+The innovation covariance is:
+
+$$
+\mathbf{S}_k = \mathbb{E}[\boldsymbol{\nu}_k \boldsymbol{\nu}_k^T]
+\tag{5.4}
+$$
+
+Substituting equation (5.2) and expanding:
+
+$$
+\mathbf{S}_k = \mathbb{E}\left[\mathbf{H}_k(\mathbf{x}_k - \hat{\mathbf{x}}_k^-)(\mathbf{x}_k - \hat{\mathbf{x}}_k^-)^T \mathbf{H}_k^T\right] + \mathbb{E}[\mathbf{v}_k \mathbf{v}_k^T]
+\tag{5.5}
+$$
+
+The cross terms vanish because the measurement noise is independent
+of the prediction error. The first remaining term is $\mathbf{H}_k
+\mathbf{P}_k^- \mathbf{H}_k^T$ by the definition of $\mathbf{P}_k^-$
+in equation (4.6). The second remaining term is $\mathbf{R}_k$ by
+the noise assumption in equation (2.4). The innovation covariance is:
+
+$$
+\boxed{\mathbf{S}_k = \mathbf{H}_k \mathbf{P}_k^- \mathbf{H}_k^T + \mathbf{R}_k}
+\tag{5.6}
+$$
+
+The innovation covariance has two terms. The first term is the
+prediction uncertainty projected into measurement space. The second
+term is the measurement noise. Both are uncertainty contributions
+to the difference between predicted and observed measurements.
+
+The properties of the innovation sequence are central to filter
+diagnostics. Section 7 develops them in detail.
+
+### 5.2 The Kalman gain
+
+The updated state estimate is a linear combination of the predicted
+state and the innovation:
+
+$$
+\hat{\mathbf{x}}_k = \hat{\mathbf{x}}_k^- + \mathbf{K}_k \boldsymbol{\nu}_k
+\tag{5.7}
+$$
+
+The matrix $\mathbf{K}_k \in \mathbb{R}^{n \times m}$ is the Kalman
+gain. It determines how much weight the new measurement receives
+relative to the prediction. The derivation that follows establishes
+the specific form of $\mathbf{K}_k$ that minimizes the updated
+covariance.
+
+The updated covariance is:
+
+$$
+\mathbf{P}_k = \mathbb{E}\left[(\mathbf{x}_k - \hat{\mathbf{x}}_k)(\mathbf{x}_k - \hat{\mathbf{x}}_k)^T\right]
+\tag{5.8}
+$$
+
+Substituting the update equation (5.7):
+
+$$
+\mathbf{x}_k - \hat{\mathbf{x}}_k = \mathbf{x}_k - \hat{\mathbf{x}}_k^- - \mathbf{K}_k \boldsymbol{\nu}_k
+\tag{5.9}
+$$
+
+Substituting the innovation from equation (5.2):
+
+$$
+\mathbf{x}_k - \hat{\mathbf{x}}_k = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k)(\mathbf{x}_k - \hat{\mathbf{x}}_k^-) - \mathbf{K}_k \mathbf{v}_k
+\tag{5.10}
+$$
+
+The updated error is a linear combination of the prediction error and
+the measurement noise. Substituting into the covariance definition
+in equation (5.8) and expanding the outer product:
+
+$$
+\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_k^- (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k)^T + \mathbf{K}_k \mathbf{R}_k \mathbf{K}_k^T
+\tag{5.11}
+$$
+
+The cross terms vanish by the independence of the measurement noise
+and prediction error. Equation (5.11) gives the updated covariance as
+a function of the choice of $\mathbf{K}_k$. This is the Joseph form
+of the covariance update, developed further in Section 5.4.
+
+The Kalman gain is the choice of $\mathbf{K}_k$ that minimizes the
+trace of $\mathbf{P}_k$. The trace is the sum of the variances of
+the state estimate components; minimizing it minimizes the total
+mean squared error in the updated estimate.
+
+Differentiating the trace of equation (5.11) with respect to
+$\mathbf{K}_k$ and setting the derivative to zero:
+
+$$
+\frac{\partial \, \text{tr}(\mathbf{P}_k)}{\partial \mathbf{K}_k} = -2(\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_k^- \mathbf{H}_k^T + 2 \mathbf{K}_k \mathbf{R}_k = \mathbf{0}
+\tag{5.12}
+$$
+
+Rearranging:
+
+$$
+\mathbf{K}_k (\mathbf{H}_k \mathbf{P}_k^- \mathbf{H}_k^T + \mathbf{R}_k) = \mathbf{P}_k^- \mathbf{H}_k^T
+\tag{5.13}
+$$
+
+The matrix on the left is the innovation covariance $\mathbf{S}_k$
+from equation (5.6). Solving for the gain:
+
+$$
+\boxed{\mathbf{K}_k = \mathbf{P}_k^- \mathbf{H}_k^T \mathbf{S}_k^{-1}}
+\tag{5.14}
+$$
+
+The Kalman gain weighs the prediction uncertainty against the
+innovation uncertainty. The numerator $\mathbf{P}_k^- \mathbf{H}_k^T$
+is the cross-covariance between the state and the measurement. The
+denominator $\mathbf{S}_k^{-1}$ is the inverse of the innovation
+covariance. Large prediction uncertainty pushes the gain higher,
+giving more weight to the measurement. Large measurement noise pushes
+the gain lower, giving more weight to the prediction. The filter
+balances the two automatically.
+
+### 5.3 The updated state distribution
+
+Substituting the optimal gain from equation (5.14) into the covariance
+expression in equation (5.11) and simplifying produces the standard
+form of the updated covariance:
+
+$$
+\boxed{\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_k^-}
+\tag{5.15}
+$$
+
+The updated covariance is the predicted covariance reduced by the
+information contributed by the measurement. The factor $\mathbf{I} -
+\mathbf{K}_k \mathbf{H}_k$ projects out the dimensions of the state
+that the measurement informs about.
+
+The updated state estimate from equation (5.7), the updated covariance
+from equation (5.15), and the Gaussian closure property from Section
+3.3 give the posterior distribution at time $k$:
+
+$$
+p(\mathbf{x}_k \mid \mathbf{z}_{1:k}) = \mathcal{N}(\hat{\mathbf{x}}_k, \mathbf{P}_k)
+\tag{5.16}
+$$
+
+This is the same result that would be obtained by applying the
+Gaussian conditioning formula (Appendix B) directly to the joint
+distribution of $\mathbf{x}_k$ and $\mathbf{z}_k$. The minimum-variance
+derivation and the conditional-distribution derivation produce the
+same answer under linear-Gaussian assumptions. The agreement is
+expected. Section 6 develops the optimality properties that explain
+why.
+
+### 5.4 The Joseph form
+
+Equation (5.11) gave the updated covariance as a function of any gain
+$\mathbf{K}_k$, including non-optimal choices. With the optimal gain
+from equation (5.14), equation (5.11) simplifies to the standard form
+in equation (5.15). Algebraically the two are equivalent.
+
+Numerically they are not.
+
+The standard form $\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k)
+\mathbf{P}_k^-$ involves a subtraction. In finite-precision arithmetic,
+subtraction of near-equal quantities introduces error. Over many filter
+iterations, this error can compound, causing the updated covariance
+$\mathbf{P}_k$ to lose symmetry or even positive-definiteness. A
+covariance matrix that is not positive-definite is a structural
+failure of the filter.
+
+The Joseph form preserves positive-definiteness:
+
+$$
+\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_k^- (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k)^T + \mathbf{K}_k \mathbf{R}_k \mathbf{K}_k^T
+\tag{5.17}
+$$
+
+Both terms in equation (5.17) are symmetric positive-semi-definite
+products. Their sum is symmetric positive-semi-definite by construction.
+The Joseph form is numerically robust even when the gain is slightly
+suboptimal due to rounding error or covariance specification mismatch.
+
+The reference implementation uses the Joseph form. The standard form
+is mathematically cleaner; the Joseph form is what production
+estimation deploys.
