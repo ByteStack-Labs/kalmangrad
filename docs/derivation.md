@@ -248,3 +248,128 @@ been processed.
 
 The transition between predicted and updated quantities is the heart
 of the filter. The next sections derive that transition.
+
+## 3. The Bayesian Foundation
+
+### 3.1 Recursive Bayesian estimation
+
+The state estimation problem can be stated in Bayesian terms. At time
+$k$, we have observed the measurements $\mathbf{z}_{1:k} = \{\mathbf{z}_1,
+\mathbf{z}_2, \ldots, \mathbf{z}_k\}$. We want the posterior distribution
+of the state given those measurements:
+
+$$
+p(\mathbf{x}_k \mid \mathbf{z}_{1:k})
+\tag{3.1}
+$$
+
+This distribution captures everything that can be known about the state
+at time $k$ from the available data. Its mean is the best estimate. Its
+covariance is the uncertainty in that estimate.
+
+The recursive structure comes from a simple observation. The posterior
+at time $k$ can be computed from the posterior at time $k-1$ without
+revisiting all past measurements. This is what makes the filter a
+filter rather than a batch estimator.
+
+The recursion proceeds in two steps:
+
+$$
+p(\mathbf{x}_{k-1} \mid \mathbf{z}_{1:k-1}) \;\xrightarrow{\text{predict}}\;
+p(\mathbf{x}_k \mid \mathbf{z}_{1:k-1}) \;\xrightarrow{\text{update}}\;
+p(\mathbf{x}_k \mid \mathbf{z}_{1:k})
+\tag{3.2}
+$$
+
+The prediction step takes the posterior from the previous time step
+forward through the dynamics, producing a prior at the current time step.
+The update step incorporates the new measurement, producing the new
+posterior. Each step has a precise mathematical form derived in the
+sections that follow.
+
+### 3.2 The prediction-update structure
+
+The prediction step is an application of the law of total probability.
+Given the posterior at time $k-1$ and the process model from Section
+2.1, the predicted distribution at time $k$ is:
+
+$$
+p(\mathbf{x}_k \mid \mathbf{z}_{1:k-1}) = \int p(\mathbf{x}_k \mid \mathbf{x}_{k-1}) \, p(\mathbf{x}_{k-1} \mid \mathbf{z}_{1:k-1}) \, d\mathbf{x}_{k-1}
+\tag{3.3}
+$$
+
+The integral marginalizes over the previous state. The transition
+density $p(\mathbf{x}_k \mid \mathbf{x}_{k-1})$ encodes the process
+model. The result is the distribution of $\mathbf{x}_k$ conditioned on
+all measurements up to but not including time $k$.
+
+The update step is an application of Bayes' rule. Given the predicted
+distribution and the measurement model from Section 2.2, the posterior
+after observing $\mathbf{z}_k$ is:
+
+$$
+p(\mathbf{x}_k \mid \mathbf{z}_{1:k}) = \frac{p(\mathbf{z}_k \mid \mathbf{x}_k) \, p(\mathbf{x}_k \mid \mathbf{z}_{1:k-1})}{p(\mathbf{z}_k \mid \mathbf{z}_{1:k-1})}
+\tag{3.4}
+$$
+
+The likelihood $p(\mathbf{z}_k \mid \mathbf{x}_k)$ encodes the
+measurement model. The denominator is a normalizing constant. The
+numerator is the product of the prior at time $k$ and the likelihood
+of the observed measurement.
+
+Equations (3.3) and (3.4) are general. They hold for any process and
+measurement model with well-defined transition and likelihood densities.
+The Kalman filter is what these equations become under the linear-Gaussian
+assumptions of Section 2.
+
+### 3.3 Why Gaussian and linear produce closed form
+
+The integrals and ratios in equations (3.3) and (3.4) are generally
+intractable. For arbitrary process and measurement models, the
+posterior at time $k$ may have no analytical form. Particle filters
+and other Monte Carlo methods exist precisely because most state
+estimation problems do not admit closed-form solutions.
+
+The linear-Gaussian case is the exception. Under the assumptions of
+Section 2:
+
+- The transition density $p(\mathbf{x}_k \mid \mathbf{x}_{k-1})$ is
+  Gaussian
+- The likelihood $p(\mathbf{z}_k \mid \mathbf{x}_k)$ is Gaussian
+- The initial distribution $p(\mathbf{x}_0)$ is Gaussian
+
+Two facts about Gaussian distributions make the recursion close in
+closed form.
+
+**Linear transformations of Gaussians are Gaussian.** If
+$\mathbf{x} \sim \mathcal{N}(\boldsymbol{\mu}, \boldsymbol{\Sigma})$ and
+$\mathbf{y} = \mathbf{A}\mathbf{x} + \mathbf{b}$, then $\mathbf{y}
+\sim \mathcal{N}(\mathbf{A}\boldsymbol{\mu} + \mathbf{b}, \mathbf{A}\boldsymbol{\Sigma}\mathbf{A}^T)$.
+This makes the prediction step in equation (3.3) analytically tractable.
+The integral over a Gaussian transition density and a Gaussian prior
+produces a Gaussian result.
+
+**Conditional distributions of jointly Gaussian variables are Gaussian.**
+If $\mathbf{x}$ and $\mathbf{z}$ are jointly Gaussian, then
+$p(\mathbf{x} \mid \mathbf{z})$ is Gaussian with mean and covariance
+given by the Gaussian conditioning formula (Appendix B). This makes
+the update step in equation (3.4) analytically tractable. The ratio
+of Gaussian likelihood and Gaussian prior produces a Gaussian
+posterior.
+
+The combination of these two facts means that if the posterior at
+time $k-1$ is Gaussian, then the posterior at time $k$ is also
+Gaussian. The recursion preserves the form. Because the initial
+distribution is Gaussian by assumption, the posterior at every time
+step is Gaussian.
+
+A Gaussian distribution is fully characterized by its mean and
+covariance. The recursion therefore reduces from "propagate a
+distribution" to "propagate two quantities: a mean vector and a
+covariance matrix." That reduction is what makes the Kalman filter
+computationally tractable.
+
+The sections that follow derive the explicit recursions for the mean
+and covariance. Section 4 derives the prediction step. Section 5
+derives the update step. Section 6 establishes the optimality
+properties that hold under the linear-Gaussian assumptions.
