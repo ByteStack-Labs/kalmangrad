@@ -1002,3 +1002,173 @@ in production estimation. A filter that runs without monitoring its
 innovation sequence is operating blind. A filter that monitors its
 innovation sequence knows when it is performing correctly and when
 it is not. The work of an estimation engineer is to deploy the latter.
+
+## 8. The Complete Algorithm
+
+The Kalman filter is a recursive estimator with three operational
+phases: initialization, prediction, and update. Sections 4 and 5
+derived the equations for prediction and update. Section 7 established
+the statistical properties that govern correct operation. This section
+consolidates the result into a complete algorithm.
+
+### 8.1 Initialization
+
+The filter requires an initial state estimate and an initial covariance:
+
+$$
+\hat{\mathbf{x}}_0, \quad \mathbf{P}_0
+\tag{8.1}
+$$
+
+The initial estimate $\hat{\mathbf{x}}_0$ represents the best prior
+knowledge of the state before any measurements have been processed.
+The initial covariance $\mathbf{P}_0$ represents the uncertainty in
+that prior knowledge.
+
+When prior information is strong, $\hat{\mathbf{x}}_0$ should be set
+to the known mean and $\mathbf{P}_0$ should reflect the known
+uncertainty. When prior information is weak, $\mathbf{P}_0$ should
+be set large enough that the first few measurements dominate the
+estimate. A large $\mathbf{P}_0$ models an uninformative prior.
+
+The filter is sensitive to initialization for the first several
+measurements. After enough measurements have been processed, the
+effect of the initialization fades. The filter converges to estimates
+that depend primarily on the dynamics, the measurements, and the noise
+covariances.
+
+The process and measurement noise covariances $\mathbf{Q}_k$ and
+$\mathbf{R}_k$ must also be specified before the filter operates.
+These are model parameters, not internal filter state. They reflect
+the modeler's assumptions about the system, not estimates the filter
+produces.
+
+### 8.2 Predict
+
+The prediction step propagates the state estimate and its covariance
+forward through the dynamics:
+
+$$
+\hat{\mathbf{x}}_k^- = \mathbf{F}_k \hat{\mathbf{x}}_{k-1}
+\tag{8.2}
+$$
+
+$$
+\mathbf{P}_k^- = \mathbf{F}_k \mathbf{P}_{k-1} \mathbf{F}_k^T + \mathbf{Q}_k
+\tag{8.3}
+$$
+
+The predicted state is the previous estimate propagated through the
+state transition matrix. The predicted covariance is the previous
+covariance propagated through the same matrix, plus the additional
+uncertainty introduced by the process noise.
+
+The prediction step requires no measurement. It can be applied at
+each time step regardless of whether a measurement is available. When
+measurements arrive irregularly, the filter can predict forward
+through multiple steps before incorporating the next measurement.
+
+### 8.3 Update
+
+The update step incorporates a new measurement into the state estimate.
+It begins with the innovation:
+
+$$
+\boldsymbol{\nu}_k = \mathbf{z}_k - \mathbf{H}_k \hat{\mathbf{x}}_k^-
+\tag{8.4}
+$$
+
+The innovation covariance follows from the prediction covariance and
+the measurement noise covariance:
+
+$$
+\mathbf{S}_k = \mathbf{H}_k \mathbf{P}_k^- \mathbf{H}_k^T + \mathbf{R}_k
+\tag{8.5}
+$$
+
+The Kalman gain weighs the prediction uncertainty against the
+innovation uncertainty:
+
+$$
+\mathbf{K}_k = \mathbf{P}_k^- \mathbf{H}_k^T \mathbf{S}_k^{-1}
+\tag{8.6}
+$$
+
+The updated state estimate combines the prediction with the
+innovation, weighted by the gain:
+
+$$
+\hat{\mathbf{x}}_k = \hat{\mathbf{x}}_k^- + \mathbf{K}_k \boldsymbol{\nu}_k
+\tag{8.7}
+$$
+
+The updated covariance uses the Joseph form for numerical robustness:
+
+$$
+\mathbf{P}_k = (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k) \mathbf{P}_k^- (\mathbf{I} - \mathbf{K}_k \mathbf{H}_k)^T + \mathbf{K}_k \mathbf{R}_k \mathbf{K}_k^T
+\tag{8.8}
+$$
+
+The update step requires a measurement. When no measurement is
+available at time $k$, the update step is skipped and the filter
+output is the predicted state and covariance.
+
+### 8.4 Pseudocode form
+
+The complete algorithm in pseudocode:
+
+```
+Inputs:
+    F[k], Q[k]                       # process model at each time step
+    H[k], R[k]                       # measurement model at each time step
+    z[k]                             # measurements at each time step
+    x_hat_0, P_0                     # initial state and covariance
+
+Initialize:
+    x_hat = x_hat_0
+    P = P_0
+
+For k = 1, 2, ...:
+
+    # Predict
+    x_pred = F[k] @ x_hat
+    P_pred = F[k] @ P @ F[k].T + Q[k]
+
+    if measurement z[k] is available:
+
+        # Compute innovation and its covariance
+        nu = z[k] - H[k] @ x_pred
+        S = H[k] @ P_pred @ H[k].T + R[k]
+
+        # Compute Kalman gain
+        K = P_pred @ H[k].T @ inverse(S)
+
+        # Update state estimate
+        x_hat = x_pred + K @ nu
+
+        # Update covariance (Joseph form)
+        I_KH = I - K @ H[k]
+        P = I_KH @ P_pred @ I_KH.T + K @ R[k] @ K.T
+
+        # Diagnostic: record innovation and its statistics
+        record(nu, S)
+
+    else:
+
+        # No measurement; carry prediction forward
+        x_hat = x_pred
+        P = P_pred
+
+    output(x_hat, P)
+```
+
+The reference implementation in [`kalman_filter.py`](../kalman_filter.py)
+follows this structure directly. The diagnostic recording step feeds
+the innovation sequence analysis tools in
+[`diagnostics.py`](../diagnostics.py) developed from the properties in
+Section 7.
+
+The complete recursion is contained in equations (8.2) through (8.8).
+Given the inputs and initial conditions, the filter produces estimates
+that are optimal under the assumptions of Section 2 and self-diagnosing
+through the innovation sequence developed in Section 7.
