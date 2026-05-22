@@ -30,6 +30,13 @@ from typing import NamedTuple
 
 import numpy as np
 
+
+# Input accepted by the diagnostic functions. The scalar measurement case
+# may be passed as a sequence of scalars, which the stacking helpers
+# promote to arrays, alongside the sequence-of-arrays and ndarray forms.
+DiagnosticInput = Sequence[np.ndarray] | Sequence[float] | np.ndarray
+
+
 # Two sided 95 percent intervals of the chi squared distribution for
 # small degrees of freedom. The first entry of each tuple is the 0.025
 # quantile and the second is the 0.975 quantile. Under a correctly
@@ -47,7 +54,7 @@ CHI2_95_INTERVAL: dict[int, tuple[float, float]] = {
 }
 
 
-def _stack_vectors(vectors: Sequence[np.ndarray] | np.ndarray) -> np.ndarray:
+def _stack_vectors(vectors: DiagnosticInput) -> np.ndarray:
     """Coerce a sequence of vectors into a 2D array of shape (K, m).
 
     Accepts a list of 1D arrays of shape (m,), a 2D array of shape
@@ -59,12 +66,14 @@ def _stack_vectors(vectors: Sequence[np.ndarray] | np.ndarray) -> np.ndarray:
     if arr.ndim == 1:
         arr = arr.reshape(-1, 1)
     if arr.ndim != 2:
-        raise ValueError(f"vectors must be 1D or 2D, got ndim={arr.ndim}")
+        raise ValueError(
+            f"vectors must be 1D or 2D, got ndim={arr.ndim}"
+        )
     return arr
 
 
 def _stack_matrices(
-    matrices: Sequence[np.ndarray] | np.ndarray,
+    matrices: DiagnosticInput,
     K: int,
     m: int,
     name: str,
@@ -74,13 +83,15 @@ def _stack_matrices(
     if arr.ndim == 1:
         arr = arr.reshape(-1, 1, 1)
     if arr.shape != (K, m, m):
-        raise ValueError(f"{name} must have shape ({K}, {m}, {m}), got {arr.shape}")
+        raise ValueError(
+            f"{name} must have shape ({K}, {m}, {m}), got {arr.shape}"
+        )
     return arr
 
 
 def nis(
-    innovations: Sequence[np.ndarray] | np.ndarray,
-    innovation_covariances: Sequence[np.ndarray] | np.ndarray,
+    innovations: DiagnosticInput,
+    innovation_covariances: DiagnosticInput,
 ) -> np.ndarray:
     """Per step Normalized Innovation Squared (Section 7.3, eq 7.5).
 
@@ -120,8 +131,8 @@ def nis(
 
 
 def nees(
-    estimation_errors: Sequence[np.ndarray] | np.ndarray,
-    covariances: Sequence[np.ndarray] | np.ndarray,
+    estimation_errors: DiagnosticInput,
+    covariances: DiagnosticInput,
 ) -> np.ndarray:
     """Per step Normalized Estimation Error Squared.
 
@@ -176,8 +187,8 @@ class InnovationMean(NamedTuple):
 
 
 def innovation_mean(
-    innovations: Sequence[np.ndarray] | np.ndarray,
-    innovation_covariances: Sequence[np.ndarray] | np.ndarray | None = None,
+    innovations: DiagnosticInput,
+    innovation_covariances: DiagnosticInput | None = None,
 ) -> InnovationMean:
     """Time averaged innovation (Section 7.2, equation 7.2).
 
@@ -226,8 +237,8 @@ def innovation_mean(
 
 
 def innovation_autocorrelation(
-    innovations: Sequence[np.ndarray] | np.ndarray,
-    innovation_covariances: Sequence[np.ndarray] | np.ndarray,
+    innovations: DiagnosticInput,
+    innovation_covariances: DiagnosticInput,
     lag: int = 1,
 ) -> float:
     """Lag k autocorrelation of the whitened innovation sequence.
@@ -274,7 +285,9 @@ def innovation_autocorrelation(
     nu = _stack_vectors(innovations)
     K, m = nu.shape
     if lag >= K:
-        raise ValueError(f"lag {lag} must be smaller than the number of samples {K}")
+        raise ValueError(
+            f"lag {lag} must be smaller than the number of samples {K}"
+        )
     S = _stack_matrices(innovation_covariances, K, m, "innovation_covariances")
 
     # Whitening transform. Solving L_k w_k = nu_k gives
@@ -317,8 +330,8 @@ class AverageNIS(NamedTuple):
 
 
 def average_nis(
-    innovations: Sequence[np.ndarray] | np.ndarray,
-    innovation_covariances: Sequence[np.ndarray] | np.ndarray,
+    innovations: DiagnosticInput,
+    innovation_covariances: DiagnosticInput,
 ) -> AverageNIS:
     """Time averaged NIS with consistency statistics (Section 7.3).
 
@@ -396,8 +409,8 @@ class DivergenceVerdict(NamedTuple):
 
 
 def detect_divergence(
-    innovations: Sequence[np.ndarray] | np.ndarray,
-    innovation_covariances: Sequence[np.ndarray] | np.ndarray,
+    innovations: DiagnosticInput,
+    innovation_covariances: DiagnosticInput,
     nis_factor: float = 3.0,
     breach_fraction_threshold: float = 0.2,
 ) -> DivergenceVerdict:

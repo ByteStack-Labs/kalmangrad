@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from types import ModuleType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import numpy as np
 
@@ -56,7 +56,9 @@ def _require_matplotlib() -> ModuleType:
 def _figure_and_axes(plt: ModuleType, ax: Axes | None) -> tuple[Figure, Axes]:
     """Return the figure and axes to draw on, creating them if needed."""
     if ax is not None:
-        return ax.figure, ax
+        # Axes.figure is typed Figure | SubFigure; these plots use a
+        # top-level Figure, so narrow it for the caller.
+        return cast("Figure", ax.figure), ax
     fig, new_ax = plt.subplots(figsize=(10, 5))
     return fig, new_ax
 
