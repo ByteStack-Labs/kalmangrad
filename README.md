@@ -47,7 +47,7 @@ Install from source:
 ```bash
 git clone https://github.com/ByteStack-Labs/kalmangrad.git
 cd kalmangrad
-pip install -e .
+uv sync
 ```
 
 ```python
@@ -77,7 +77,7 @@ for z in measurements:
 For visualization, install the optional extra:
 
 ```bash
-pip install -e ".[viz]"
+uv sync --extra viz
 ```
 
 Full worked examples live in [`examples/`](examples/).
@@ -143,6 +143,7 @@ If kalmangrad informs your work, citation is appreciated:
 ## License
 
 Apache 2.0. See [LICENSE](LICENSE) for full terms.
-```
+
+---
 
 Built by [Jesse Moses](https://github.com/Cre4T3Tiv3) at [ByteStack Labs](https://bytestacklabs.com).
