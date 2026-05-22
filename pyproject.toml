@@ -37,7 +37,7 @@ all = [
 ]
 
 [tool.setuptools]
-py-modules = ["kalman_filter", "diagnostics"]
+py-modules = ["kalman_filter", "diagnostics", "visualize"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
@@ -48,7 +48,7 @@ python_classes = ["Test*"]
 python_functions = ["test_*"]
 
 [tool.coverage.run]
-source = ["kalman_filter", "diagnostics"]
+source = ["kalman_filter", "diagnostics", "visualize"]
 branch = true
 
 [tool.coverage.report]
