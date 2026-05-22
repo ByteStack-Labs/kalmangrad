@@ -85,6 +85,9 @@ ignore = [
     "S101",   # Use of assert detected (allowed in tests)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "ANN"]
+
 [tool.mypy]
 python_version = "3.10"
 strict = true
