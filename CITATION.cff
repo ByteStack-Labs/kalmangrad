@@ -3,9 +3,9 @@ message: "If kalmangrad informs your work, citation is appreciated."
 type: software
 title: "kalmangrad"
 abstract: >-
-  Kalman filtering from scratch with autodiff visualization,
-  mathematical derivation, and diagnostic instrumentation
-  for production estimation systems.
+  Kalman filtering from scratch: a first-principles derivation, a
+  reference implementation, and diagnostic instrumentation for the
+  standard linear Kalman filter.
 authors:
   - family-names: Moses
     given-names: Jesse
@@ -17,9 +17,8 @@ date-released: 2026-05-09
 keywords:
   - kalman-filter
   - state-estimation
-  - automatic-differentiation
   - bayesian-filtering
-  - autodiff
+  - innovation-diagnostics
   - from-scratch
 preferred-citation:
   type: software
