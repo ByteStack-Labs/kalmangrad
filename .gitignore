@@ -142,6 +142,7 @@ results/
 *.svg
 *.pdf
 !docs/figures/*.png
+!docs/assets/*.png
 !docs/figures/*.svg
 !examples/figures/*.png
 !examples/figures/*.svg
