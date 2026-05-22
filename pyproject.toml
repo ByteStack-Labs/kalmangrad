@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kalmangrad"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "Kalman filtering from scratch: derivation, reference implementation, diagnostic instrumentation."
 requires-python = ">=3.10"
 license = {text = "Apache-2.0"}

@@ -2,7 +2,7 @@
 
 > Kalman filtering from scratch: derivation, reference implementation, diagnostic instrumentation.
 
-**Status:** v0.1 in development (private)
+**Status:** v0.1.0
 **License:** Apache 2.0
 **Author:** Jesse Moses
 
@@ -108,10 +108,6 @@ A correctly functioning Kalman filter has statistical properties: innovations sh
 - **Filter divergence detection**: early warning when assumptions break
 
 Mathematical foundation in [`docs/derivation.md`](docs/derivation.md), implementation in [`diagnostics.py`](diagnostics.py).
-
-## Development status
-
-In active development toward v0.1.0. Repository is private during v0.1 development; visibility flips public on the v0.1.0 tag.
 
 ## Citation
 
